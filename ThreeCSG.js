@@ -1,4 +1,3 @@
-
 'use strict';
 window.ThreeBSP = (function() {
 	
@@ -516,3 +515,38 @@ window.ThreeBSP = (function() {
 		this.divider.flip();
 		if ( this.front ) this.front.invert();
 		if ( this.back ) this.back.invert();
+		
+		temp = this.front;
+		this.front = this.back;
+		this.back = temp;
+		
+		return this;
+	};
+	ThreeBSP.Node.prototype.clipPolygons = function( polygons ) {
+		var i, polygon_count,
+			front, back;
+
+		if ( !this.divider ) return polygons.slice();
+		
+		front = [], back = [];
+		
+		for ( i = 0, polygon_count = polygons.length; i < polygon_count; i++ ) {
+			this.divider.splitPolygon( polygons[i], front, back, front, back );
+		}
+
+		if ( this.front ) front = this.front.clipPolygons( front );
+		if ( this.back ) back = this.back.clipPolygons( back );
+		else back = [];
+
+		return front.concat( back );
+	};
+	
+	ThreeBSP.Node.prototype.clipTo = function( node ) {
+		this.polygons = node.clipPolygons( this.polygons );
+		if ( this.front ) this.front.clipTo( node );
+		if ( this.back ) this.back.clipTo( node );
+	};
+	
+	
+	return ThreeBSP;
+})();
